@@ -5,36 +5,50 @@ module Cheatsheet
     SOURCE = "https://raw.githubusercontent.com/rstacruz/cheatsheets/gh-pages/"
     FILES_SOURCE = "https://api.github.com/repos/rstacruz/cheatsheets/contents/"
 
+    def self.start(*args)
+        begin
+          self.render(self.fetch(*args))
+        rescue CheatSheetClientException => e
+          self.render e
+        end
+    end
+
     def self.fetch(*args)
       key = args[0].first
 
       # Show available cheatsheets
       if (key === '-a')
-	files_uri = URI(FILES_SOURCE)
-	begin
-	  files = JSON.parse(self.fetch_raw(files_uri))
-	  filter = ''
+        files_uri = URI(FILES_SOURCE)
+        begin
+          files = JSON.parse(self.fetch_raw(files_uri))
+          filter = ''
 
-	  if args[0].size > 1
-	    filter = args[0].last
-	  end
-	  
+          if args[0].size > 1
+            filter = args[0].last
+          end
+
           mds = files.select { |elem|
             elem['name'].end_with?(".md") && elem['name'].include?(filter)
           }.map { |elem|
-	    elem['name'][0..-4]
-	  }
+            File.basename(elem['name'],File.extname(elem['name']))
+          }
 
-	  puts mds
-	rescue CheatSheetClientException => e
-          puts e.message
+          if mds.size === 0
+            raise CheatSheetClientException.new "We don't have any cheatsheet matching your search query"
+          end
+
+          return mds
+        rescue CheatSheetClientException => e
+          raise CheatSheetClientException.new e.message
+        rescue JSON::ParserError
+          raise CheatSheetClientException.new "Try again later"
         end
       else
         uri = URI(SOURCE + key + ".md")
         begin
-          puts self.fetch_raw(uri)
+          return self.fetch_raw(uri)
         rescue CheatSheetClientException => e
-          puts e.message
+          raise CheatSheetClientException.new e.message
         end
       end
     end
@@ -50,6 +64,10 @@ module Cheatsheet
       else
         response.value
       end
+    end
+
+    def self.render(string)
+      puts string
     end
 
   end

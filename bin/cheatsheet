@@ -4,4 +4,4 @@ require "cheatsheet"
 
 args = ARGV.clone
 
-Cheatsheet::Client.fetch args
+Cheatsheet::Client.start args

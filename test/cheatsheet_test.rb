@@ -7,11 +7,23 @@ class CheatsheetTest < Minitest::Test
   end
 
   def test_client_success
-    assert_match /Jollibee/, Cheatsheet::Client.fetch("ph-food-delivery")
+    assert_match (/Jollibee/), Cheatsheet::Client.fetch(["ph-food-delivery"])
   end
 
   def test_client_failure
-    assert_raises(CheatSheetClientException) { Cheatsheet::Client.fetch("us-food-delivery") }
+    assert_raises(CheatSheetClientException) { Cheatsheet::Client.fetch(["us-food-delivery"]) }
+  end
+
+  def test_client_search_finds
+    assert_includes Cheatsheet::Client.fetch(["-a", "xpath"]), 'xpath'
+  end
+
+  def test_client_search_doesnt_find
+    assert_raises(CheatSheetClientException) { Cheatsheet::Client.fetch(["-a", "xmen"]) }
+  end
+
+  def test_client_search_finds_correctly
+    refute_includes Cheatsheet::Client.fetch(["-a", "xpath"]), 'react'
   end
 
   def test_client_invalid_result
